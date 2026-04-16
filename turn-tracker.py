@@ -148,7 +148,7 @@ while True:
                                         break 
                             if caster_select == 'r':
                                 break
-                            if caster_select != 'c' or 'm' or 'r':
+                            if caster_select != 'c' and caster_select != 'm' and caster_select != 'r':
                                 print('\nPlease select \'c\', \'m\', or \'r\' to proceed')
                     if light_select == 'p':
                         while True:
@@ -188,7 +188,7 @@ while True:
 
     elif action == 's':
         while True:
-            target_light = input('\nWould you like to snuff out a [t]orch, [l]antern, [c]leric\'s light spell, [m]agic user\'s light spell, a [p]otion of light, or [r]eturn?')
+            target_light = input('\nWould you like to snuff out a [t]orch, [l]antern, [c]leric\'s light spell, [m]agic user\'s light spell, a [p]otion of light, or [r]eturn? ')
             if target_light == 't':
                 torch = 0
                 print('\nTorch snuffed')
@@ -206,15 +206,18 @@ while True:
                 print('\nPotion of light snuffed')
             if target_light == 'r':
                 break
-            if target_light != 't' or 'l' or 'c' or 'm' or 'p' or 'r':
+            if target_light != 't' and target_light != 'l' and target_light != 'c' and target_light != 'm' and target_light != 'p' and target_light != 'r':
                 print('\nPlease select a valid option')
 
     elif action == 'q':
         print(f'\nYou have quit the app. Goodbye!')
         break
 
-    elif action != 'n' or 'c' or 't' or 'l' or 'p' or 'o' or 'q' or 's':
+    elif action != 'n' and action != 'c' and action != 't' and action != 'l' and action != 'p' and action != 'o' and action != 'q' and action != 's':
         print(f'\nThis is not a valid option. Please try again.')
 
-    input('\nPress enter to continue.')
-    os.system('clear')
+    input('\nPress enter to continue.\n')
+    if os.name == 'posix':
+        os.system('clear')
+    if os.name == 'nt':
+        os.system('cls')
