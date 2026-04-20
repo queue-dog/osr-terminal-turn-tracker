@@ -104,7 +104,7 @@ while True:
                                 print('\nSorry, turns must be a number.')
                             else:
                                 wmConfig = int(wmConfig)
-                                wmInterval = vmConfig
+                                wmInterval = wmConfig
                                 print(f'\nInterval set to {wmInterval}')
                                 break
                     case 'l':
@@ -157,6 +157,8 @@ while True:
                                                 break
                                             case _:
                                                 print(f'\nPlease select [c]leric or [m]agic user.')
+                                case 'r':
+                                    break
                                 case _:
                                     print('\nPlease select \'c\', \'m\', or \'r\' to proceed')
                     case 'p':
