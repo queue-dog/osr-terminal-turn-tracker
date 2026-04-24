@@ -284,7 +284,7 @@ def mainApp():
             case 't': # Top level option, light torch
                 lightTorch()
             case 'l': # Top level option, light lantern
-                lightLantern
+                lightLantern()
             case 'p': # Top level option, drink potion
                 lightPotion()
             case 'o': # Top level option, go to options menu
