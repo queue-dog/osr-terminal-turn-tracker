@@ -1,0 +1,2 @@
+turnCount,muLightTime,clLightTime,torchTime,lanternTime,wmInterval,ignoreWanderingMonsters,restInterval,potionTime,ignoreRest
+0,-1,-1,-1,-1,2,False,6,-1,False
