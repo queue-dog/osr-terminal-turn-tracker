@@ -5,18 +5,19 @@
 # TODO: Make this a real TUI, save configurations, and print current stats between turns.
 
 import os
+import csv
 
-turnCount = 0
-muLightTime = 0
-clLightTime = 0
-torchTime = 0
-lanternTime = 0
-wmInterval = 2
-ignoreWanderingMonsters = False # This is not active yet. 
-restInterval = 6
-potionTime = 0
-ignoreRest = False
 action = None
+turnCount = None
+muLightTime = None
+clLightTime = None
+torchTime = None
+lanternTime = None
+wmInterval = None
+potionTime = None
+ignoreWanderingMonsters = None
+restInterval = None
+ignoreRest = None
 
 # Clear the screen
 if os.name == 'posix':
@@ -25,6 +26,76 @@ if os.name == 'nt':
     os.system('cls')
 
 # Define functions
+def getVariables():
+    with open('config.csv', mode='r') as csvFile:
+        csvRead = csv.DictReader(csvFile)
+        for row in csvRead:
+            global turnCount
+            turnCount = row['turnCount']
+            turnCount = int(turnCount)
+            global muLightTime
+            muLightTime = row['muLightTime']
+            muLightTime = int(muLightTime)
+            global clLightTime
+            clLightTime = row['clLightTime']
+            clLightTime = int(clLightTime)
+            global torchTime
+            torchTime = row['torchTime']
+            torchTime = int(torchTime)
+            global lanternTime
+            lanternTime = row['lanternTime']
+            lanternTime = int(lanternTime)
+            global wmInterval
+            wmInterval = row['wmInterval']
+            wmInterval = int(wmInterval)
+            global ignoreWanderingMonsters
+            ignoreWanderingMonsters = row['ignoreWanderingMonsters']
+            if ignoreWanderingMonsters == 'False':
+                ignoreWanderingMonsters = False
+            else:
+                ignoreWanderingMonsters = True
+            global restInterval
+            restInterval = row['restInterval']
+            restInterval = int(restInterval)
+            global potionTime
+            potionTime = row['potionTime']
+            potionTime = int(potionTime)
+            global ignoreRest
+            ignoreRest = row['ignoreRest']
+            if ignoreRest == 'False':
+                ignoreRest = False
+            else:
+                ignoreRest = True
+
+def writeVariables():
+    with open('config.csv', mode='w') as csvFile:
+        fieldNames = ['turnCount', 'muLightTime', 'clLightTime', 'torchTime','lanternTime','wmInterval','ignoreWanderingMonsters','restInterval','potionTime','ignoreRest']
+        csvWrite = csv.DictWriter(csvFile, fieldnames=fieldNames)
+        csvWrite.writeheader()
+        csvWrite.writerow({'turnCount': turnCount, 'muLightTime': muLightTime, 'clLightTime': clLightTime, 'torchTime': torchTime, 'lanternTime': lanternTime, 'wmInterval': wmInterval, 'ignoreWanderingMonsters': ignoreWanderingMonsters, 'restInterval': restInterval, 'potionTime': potionTime, 'ignoreRest': ignoreRest})
+        print(f'Save complete!')
+
+def resetAllVariables():
+    global turnCount
+    global muLightTime
+    global clLightTime
+    global torchTime
+    global lanternTime
+    global wmInterval
+    global ignoreWanderingMonsters
+    global restInterval
+    global ignoreRest
+    turnCount = 0
+    muLightTime = -1
+    clLightTime = -1
+    torchTime = -1
+    lanternTime = -1
+    wmInterval = 2
+    ignoreWanderingMonsters = False
+    restInterval = 6
+    ignoreRest = False 
+    print('All variables set to initial state.')
+
 def turnAdvance(): # What runs every time a turn advances
         global turnCount
         global torchTime
@@ -35,43 +106,39 @@ def turnAdvance(): # What runs every time a turn advances
         global wmInterval
         global restInterval
         global ignoreRest
+        global ignoreWanderingMonsters
         turnCount += 1 # As turnCount advances, each light timer counts down
         print(f'\nCurrent turn: {turnCount}')
-        if torchTime > 0:
+        if torchTime == 0:
+            print('\nTorch extinguished!')
+            torchTime -= 1
+        elif torchTime > 0:
             torchTime -= 1
             print(f'\nTorch turns remaining: {torchTime}')
-        elif torchTime > -1:
-            torchTime -= 1
-        elif torchTime == 0:
-            print('\nTorch extinguished')
-        if lanternTime > 0:
+        if lanternTime == 0:
+            print('\nLantern extinguished!')
+            lanternTime -= 1
+        elif lanternTime > 0:
             lanternTime -= 1
             print(f'\nLantern turns remaining: {lanternTime}')
-        elif lanternTime > -1:
-            lanternTime -= 1
-        elif lanternTime == 0:
-            print('\nLantern extinguished')
-        if muLightTime > 0:
+        if muLightTime == 0:
+            print('\nMagic user spell expired!')
+            muLightTime -= 1
+        elif muLightTime > 0:
             muLightTime -= 1
             print(f'\nMagic user spell turns remaining: {muLightTime}')
-        elif muLightTime > -1:
-            muLightTime -= 1
-        elif muLightTime == 0:
-            print('\nMagic user spell expired')
-        if clLightTime > 0:
+        if clLightTime == 0:
+            print('\nCleric spell expired!')
+            clLightTime -= 1
+        elif clLightTime > 0:
             clLightTime -= 1
             print(f'\nCleric spell turns remaining: {clLightTime}')
-        elif clLightTime > -1:
-            clLightTime -= 1
-        elif clLightTime == 0:
-            print('\nCleric spell expired')
-        if potionTime > 0:
+        if potionTime == 0:
+            print('\nPotion expired!')
             potionTime -= 1
-            print(f'\nPotion of Light turns remaining: {potionTime}')
-        elif potionTime > -1:
+        elif potionTime > 0:
             potionTime -= 1
-        elif potionTime == 0:
-            print('\nPotion of light extinguished')
+            print(f'\nPotion turns remaining: {potionTime}')
         if turnCount % wmInterval == 0 and ignoreWanderingMonsters == False: # Check for monsters at the configured interval
             print('\nCheck for wandering monsters.')
         if turnCount % restInterval == 0 and ignoreRest == False: # Check rest requirements at the configured interval if rests are required
@@ -126,28 +193,50 @@ def optionsMenu():
     optionMenuSelect = None
     global restInterval
     global ignoreRest
-    while optionMenuSelect != 'r':
-        optionMenuSelect = input('\nPlease select your desired option:\nchange [w]andering monster interval\nmodify [l]ight source times\n[c]hange resting options\n[r]eturn to the previous menu: ')
+    while optionMenuSelect != 'q':
+        optionMenuSelect = input('\nPlease select your desired option:\nchange [w]andering monster settings\nmodify [l]ight source times\n[c]hange resting options\n[s]ave the running state\n[r]eset all trackers\n[q]uit to the previous menu: ')
         match optionMenuSelect:
             case 'w': # Second level option, configure wandering monster checks
                     wmOptions()
             case 'l': # Second level option, configure timers for light sources
                    lightOptions() 
-            case 'r': # Second level option, return to previous menu
+            case 'q': # Second level option, return to previous menu
                 pass
+            case 's':
+                writeVariables()
             case 'c': # Second level option, rest options
                restOptions() 
+            case 'r':
+                resetAllVariables()
+            case _:
+                print('Please select a valid option.')
 def wmOptions(): # Configure wandering monsters. TODO: add options to disable wandering monster checks
     global wmInterval
     global ignoreWanderingMonsters
-    # wmOptionSelect = input('\nWould you like to change the [f]requency of wandering monsters checks, [t]oggle them on or off, or [r]eturn to a previous menu?\n\n')
-    wmConfig = input('\nHow often (in number of turns) would you like to check for wandering monsters? ')
-    if wmConfig.isnumeric() == False:
-        print('\nSorry, turns must be a number.')
-    else:
-        wmConfig = int(wmConfig)
-        wmInterval = wmConfig
-        print(f'\nInterval set to {wmInterval}')
+    wmOptionSelect = input('\nWould you like to change the [f]requency of wandering monsters checks, [t]oggle them on or off, or [r]eturn to a previous menu?\n\n')
+    while wmOptionSelect != 'r':
+        match wmOptionSelect:
+            case 'f':
+                wmConfigTurns = input('\nHow often (in number of turns) would you like to check for wandering monsters? ')
+                if wmConfigTurns.isnumeric() == False:
+                    print('\nSorry, turns must be a number.')
+                else:
+                    wmConfigTurns = int(wmConfigTurns)
+                    wmInterval = wmConfigTurns
+                    print(f'\nInterval set to {wmInterval}')
+                    break
+            case 't':
+                if ignoreWanderingMonsters == False:
+                    ignoreWanderingMonsters = True
+                    print('\nNow ignoring wandering monster checks.')
+                    break
+                else:
+                    ignoreWanderingMonsters = False
+                    print('\nNow reminding about wandering monster checks.')
+            case 'r':
+                pass
+            case _:
+                print('Please select [f], [t], or [r].')
 
 def lightOptions():
     global torchTime
@@ -158,62 +247,27 @@ def lightOptions():
     lightOptionSelect = input(f'\nWould you like to modify a [t]orch, [l]antern, [s]pell, [p]otion, or [r]eturn to the previous menu? ')
     match lightOptionSelect:
         case 't': # Third level option, configure torch turns remaining
-            while True:
-                torchConfig = input('Please enter the number of turns remaining on the torch: ')
-                if torchConfig.isnumeric() == False:
-                    print(f'Torch turns must be a number. Please try again.')
-                else:
-                    torchConfig = int(torchConfig)
-                    torchTime = torchConfig
-                    print(f'Turns remaining set to {torchTime}')
-                    break
+            resetTorchTime() 
         case 'l': # Third level option, configure lantern turns
-                lanternConfig = input('\nPlease enter the number of turns remaining on the lantern: ')
-                if lanternConfig.isnumeric() == False:
-                    print(f'\nLantern turns must be a number. Please try again.')
-                else:
-                    lanternConfig = int(lanternConfig)
-                    lanternTime = lanternConfig
-                    print(f'\nTurns remaining set to {lanternTime}')
+            resetLanternTime() 
         case 's': # Third level options, configure spells
-            casterLightConfig = None
-            while casterLightConfig != 'r':
-                casterLightConfig = input('\nAre you adjusting the count for a [m]agic user or a [c]leric (or would you like to [r]eturn)? ')
-                match casterLightConfig:
-                    case 'm': # Fourth level option, choose MU
-                        muLightConfig = input('\nPlease enter the number of turns remaining on the magic user\'s spell: ')
-                        if muLightConfig.isnumeric() == False:
-                            print(f'\nSpell turns must be a number. Please try again.')
-                        else:
-                            muLightConfig = int(muLightConfig)
-                            muLightTime = muLightConfig
-                            print(f'\nTurns remaining set to {muLightTime}')
-                            break 
-                    case 'c': # Fourth level option, choose cleric
-                        clLightConfig = input('\nPlease enter the number of turns remaining on the cleric\'s spell: ')
-                        if clLightConfig.isnumeric() == False:
-                            print(f'\nSpell turns must be a number. Please try again.')
-                        else:
-                            clLightConfig = int(clLightConfig)
-                            clLightTime = clLightConfig
-                            print(f'\nTurns remaining set to {clLightTime}')
-                            break
-                    case 'r': # Fourth level option, return to previous
-                        pass
-                    case _:
-                        print(f'\nPlease select [c]leric or [m]agic user.')
+            resetCasterTime()
         case 'p': # Third level option, potion config
-                potionConfig = input('\nPlease enter the number of turns remaining on the potion: ')
-                if potionConfig.isnumeric() == False:
-                    print(f'\nPotion turns must be a number. Please try again.')
-                else:
-                    potionConfig = int(potionConfig)
-                    potionTime = potionConfig
-                    print(f'\nTurns remaining set to {potionTime}')
+            resetPotionTime()
         case 'r': # Third level option, return to previous
             pass
         case _: # Catchall
             print('\nPlease select \'c\', \'m\', or \'r\' to proceed')
+
+def resetPotionTime():
+    global potionTime
+    potionConfig = input('\nPlease enter the number of turns remaining on the potion: ')
+    if potionConfig.isnumeric() == False:
+        print(f'\nPotion turns must be a number. Please try again.')
+    else:
+        potionConfig = int(potionConfig)
+        potionTime = potionConfig
+        print(f'\nTurns remaining set to {potionTime}') 
 
 def restOptions():
     global ignoreRest
@@ -223,24 +277,31 @@ def restOptions():
         restOptionSelect = input('\nWould you like to change rest [f]requency, [t]oggle resting, or [r]eturn to the previous menu? ')
         match restOptionSelect:
             case 'f': # Third level option, frequency of rests
-                restIntervalConfig = input('How frequently (in turns) would you like to be prompted to rest? ')
-                if restIntervalConfig.isnumeric() == False:
-                    print(f'\nRest intervals turns must be a number. Please try again.')
-                else:
-                    restIntervalConfig = int(restIntervalConfig)
-                    restInterval = restIntervalConfig
-                    print(f'\nRest interval set to {restInterval}')
+                setRestFreq()            
             case 't': # Third level option, rest toggle
-                if ignoreRest == False:
-                    ignoreRest = True
-                    print('\nNow ignoring rest requirements.')
-                elif ignoreRest == True:
-                    ignoreRest = False                                
-                    print('\nNow reminding about rests.')
+                toggleRest()
             case 'r': # Third level option, return to previous menu
                 pass
             case _:
                 print('\nPlease select a valid option.')
+
+def setRestFreq():
+    global restInterval
+    restIntervalConfig = input('How frequently (in turns) would you like to be prompted to rest? ')
+    if restIntervalConfig.isnumeric() == False:
+        print(f'\nRest intervals turns must be a number. Please try again.')
+    else:
+        restIntervalConfig = int(restIntervalConfig)
+        restInterval = restIntervalConfig
+        print(f'\nRest interval set to {restInterval}')
+
+def toggleRest():
+    if ignoreRest == False:
+        ignoreRest = True
+        print('\nNow ignoring rest requirements.')
+    else:
+        ignoreRest = False                                
+        print('\nNow reminding about rests.')
 
 def snuffLight():
     global torchTime
@@ -272,8 +333,57 @@ def snuffLight():
             case _: # Second level option
                 print('\nPlease select a valid option')
 
+def resetTorchTime():
+    global torchTime
+    torchConfig = input('Please enter the number of turns remaining on the torch: ')
+    if torchConfig.isnumeric() == False:
+        print(f'Torch turns must be a number. Please try again.')
+    else:
+        torchConfig = int(torchConfig)
+        torchTime = torchConfig
+        print(f'Turns remaining set to {torchTime}')
+
+def resetLanternTime():
+    global lanternTime
+    lanternConfig = input('Please enter the number of turns remaining on the lantern: ')
+    if lanternConfig.isnumeric() == False:
+        print(f'Lantern turns must be a number. Please try again.')
+    else:
+        lanternConfig = int(lanternConfig)
+        lanternTime = lanternConfig
+        print(f'Turns remaining set to {lanternTime}')
+
+def resetCasterTime():
+    casterLightConfig = None
+    while casterLightConfig != 'r':
+        casterLightConfig = input('\nAre you adjusting the count for a [m]agic user or a [c]leric (or would you like to [r]eturn)? ')
+        match casterLightConfig:
+            case 'm': # Fourth level option, choose MU
+                muLightConfig = input('\nPlease enter the number of turns remaining on the magic user\'s spell: ')
+                if muLightConfig.isnumeric() == False:
+                    print(f'\nSpell turns must be a number. Please try again.')
+                else:
+                    muLightConfig = int(muLightConfig)
+                    muLightTime = muLightConfig
+                    print(f'\nTurns remaining set to {muLightTime}')
+                    break 
+            case 'c': # Fourth level option, choose cleric
+                clLightConfig = input('\nPlease enter the number of turns remaining on the cleric\'s spell: ')
+                if clLightConfig.isnumeric() == False:
+                    print(f'\nSpell turns must be a number. Please try again.')
+                else:
+                    clLightConfig = int(clLightConfig)
+                    clLightTime = clLightConfig
+                    print(f'\nTurns remaining set to {clLightTime}')
+                    break
+            case 'r':
+                break
+            case _:
+                print('Please select [m]agic user or [c]leric.')
+
 def mainApp():
     global action
+    getVariables()
     while action != 'q': # Main body
         action = input(f"\nSelect an option: \ngo to the [n]ext turn\n[c]ast Light\nignite a [t]orch\nignite a [l]antern\ndrink a [p]otion of light\n[s]nuff out a light\ngo to [o]ptions\n[q]uit\n\n")
         match action:
