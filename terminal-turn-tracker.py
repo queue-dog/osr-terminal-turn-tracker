@@ -28,15 +28,7 @@ if os.name == 'nt':
 
 # Define functions
 def getVariables():
-    # if getattr(sys, 'frozen', False):
-    #     basePath = sys._MEIPASS
-    # else:
-    #     basePath = os.path.abspath('.')
-    # configPath = os.path.join(basePath, 'config.csv')
-    global configPath
-    global isFrozen
     isFrozen = getattr(sys, 'frozen', False) # Check if we are already compiled
-    print(f'Is frozen? {isFrozen}')
     if isFrozen: 
         basePath = os.path.expanduser('~')
         configDir = os.path.join(basePath, '.terminal-turn-tracker')
@@ -45,6 +37,7 @@ def getVariables():
         basePath = os.path.abspath('.')
         configDir = basePath # If we are in an IDE or not compiled, run in the local directory.
     
+    global configPath
     configPath = os.path.join(configDir, 'config.csv')
 
     if not os.path.exists(configPath): # If the config isn't here, write it
@@ -60,6 +53,7 @@ def getVariables():
                       'ignoreRest']
         with open(configPath, mode='w', newline='') as csvFile: # Default values
             csvWrite = csv.DictWriter(csvFile, fieldnames=fieldNames)
+            csvWrite.writeheader()
             csvWrite.writerow({
                 'turnCount': 0, 
                 'muLightTime': -1, 
@@ -69,12 +63,11 @@ def getVariables():
                 'wmInterval': 2, 
                 'ignoreWanderingMonsters': False, 
                 'restInterval': 6, 
-                'potionTime': 0, 
+                'potionTime': -1, 
                 'ignoreRest': False
             })
-    print(configPath)
     
-    with open(configPath, mode='r', newline='') as csvFile: # Read it in
+    with open(configPath, mode='r') as csvFile: # Read it in
         csvRead = csv.DictReader(csvFile)
         for row in csvRead:
             global turnCount
