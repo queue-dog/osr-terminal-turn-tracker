@@ -2,9 +2,10 @@
 
 # A simple TUI app to track exploration turns in old school RPGs.
 
-# TODO: Make this a real TUI, save configurations, and print current stats between turns.
+# TODO: Make this a real TUI and print current stats between turns.
 
 import os
+import sys
 import csv
 
 action = None
@@ -27,7 +28,53 @@ if os.name == 'nt':
 
 # Define functions
 def getVariables():
-    with open('config.csv', mode='r') as csvFile:
+    # if getattr(sys, 'frozen', False):
+    #     basePath = sys._MEIPASS
+    # else:
+    #     basePath = os.path.abspath('.')
+    # configPath = os.path.join(basePath, 'config.csv')
+    global configPath
+    global isFrozen
+    isFrozen = getattr(sys, 'frozen', False) # Check if we are already compiled
+    print(f'Is frozen? {isFrozen}')
+    if isFrozen: 
+        basePath = os.path.expanduser('~')
+        configDir = os.path.join(basePath, '.terminal-turn-tracker')
+        os.makedirs(configDir, exist_ok=True) # Make a directory for the CSV if there isn't one already
+    else:
+        basePath = os.path.abspath('.')
+        configDir = basePath # If we are in an IDE or not compiled, run in the local directory.
+    
+    configPath = os.path.join(configDir, 'config.csv')
+
+    if not os.path.exists(configPath): # If the config isn't here, write it
+        fieldNames = ['turnCount', 
+                      'muLightTime', 
+                      'clLightTime', 
+                      'torchTime',
+                      'lanternTime',
+                      'wmInterval',
+                      'ignoreWanderingMonsters',
+                      'restInterval',
+                      'potionTime',
+                      'ignoreRest']
+        with open(configPath, mode='w', newline='') as csvFile: # Default values
+            csvWrite = csv.DictWriter(csvFile, fieldnames=fieldNames)
+            csvWrite.writerow({
+                'turnCount': 0, 
+                'muLightTime': -1, 
+                'clLightTime': -1, 
+                'torchTime': -1, 
+                'lanternTime': -1, 
+                'wmInterval': 2, 
+                'ignoreWanderingMonsters': False, 
+                'restInterval': 6, 
+                'potionTime': 0, 
+                'ignoreRest': False
+            })
+    print(configPath)
+    
+    with open(configPath, mode='r', newline='') as csvFile: # Read it in
         csvRead = csv.DictReader(csvFile)
         for row in csvRead:
             global turnCount
@@ -66,13 +113,31 @@ def getVariables():
                 ignoreRest = False
             else:
                 ignoreRest = True
-
+        
 def writeVariables():
-    with open('config.csv', mode='w') as csvFile:
-        fieldNames = ['turnCount', 'muLightTime', 'clLightTime', 'torchTime','lanternTime','wmInterval','ignoreWanderingMonsters','restInterval','potionTime','ignoreRest']
+    with open(configPath, mode='w', newline='') as csvFile:
+        fieldNames = ['turnCount',
+                      'muLightTime', 
+                      'clLightTime', 
+                      'torchTime',
+                      'lanternTime',
+                      'wmInterval',
+                      'ignoreWanderingMonsters',
+                      'restInterval',
+                      'potionTime',
+                      'ignoreRest']
         csvWrite = csv.DictWriter(csvFile, fieldnames=fieldNames)
         csvWrite.writeheader()
-        csvWrite.writerow({'turnCount': turnCount, 'muLightTime': muLightTime, 'clLightTime': clLightTime, 'torchTime': torchTime, 'lanternTime': lanternTime, 'wmInterval': wmInterval, 'ignoreWanderingMonsters': ignoreWanderingMonsters, 'restInterval': restInterval, 'potionTime': potionTime, 'ignoreRest': ignoreRest})
+        csvWrite.writerow({'turnCount': turnCount, 
+                           'muLightTime': muLightTime, 
+                           'clLightTime': clLightTime, 
+                           'torchTime': torchTime, 
+                           'lanternTime': lanternTime, 
+                           'wmInterval': wmInterval, 
+                           'ignoreWanderingMonsters': ignoreWanderingMonsters, 
+                           'restInterval': restInterval, 
+                           'potionTime': potionTime, 
+                           'ignoreRest': ignoreRest})
         print(f'Save complete!')
 
 def resetAllVariables():
